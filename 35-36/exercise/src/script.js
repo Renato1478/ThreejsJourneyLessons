@@ -3,13 +3,11 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { gsap } from "gsap";
 
-console.log(gsap);
-
 /**
  * Loaders
  */
+let sceneReady = false;
 const loadingBarElement = document.querySelector(".loading-bar"); // ? Html Loading Bar
-
 const loadingManager = new THREE.LoadingManager(
   // Loaded
   () => {
@@ -23,6 +21,10 @@ const loadingManager = new THREE.LoadingManager(
           value: 0,
         }
       );
+
+      window.setTimeout(() => {
+        sceneReady = true;
+      }, 2000);
     });
   },
   // Progress
@@ -125,14 +127,13 @@ gltfLoader.load("/models/FlightHelmet/glTF/FlightHelmet.gltf", (gltf) => {
 /**
  * Points of interest
  */
+const raycaster = new THREE.Raycaster();
 const points = [
   {
     position: new THREE.Vector3(1.55, 0.3, -0.6),
     element: document.querySelector(".point-0"),
   },
 ];
-
-console.log(points)
 
 /**
  * Lights
@@ -205,6 +206,34 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 const tick = () => {
   // Update controls
   controls.update();
+
+  if (sceneReady) {
+    // Go through each point
+    for (const point of points) {
+      const screenPosition = point.position.clone();
+      screenPosition.project(camera);
+
+      raycaster.setFromCamera(screenPosition, camera);
+      const intersects = raycaster.intersectObjects(scene.children, true);
+
+      if (intersects.length === 0) {
+        point.element.classList.add("visible");
+      } else {
+        const intersectionDistance = intersects[0].distance;
+        const pointDistance = point.position.distanceTo(camera.position);
+
+        if (intersectionDistance < pointDistance) {
+          point.element.classList.remove("visible");
+        } else {
+          point.element.classList.add("visible");
+        }
+      }
+
+      const translateX = screenPosition.x * sizes.width * 0.5;
+      const translateY = -screenPosition.y * sizes.height * 0.5;
+      point.element.style.transform = `translate(${translateX}px, ${translateY}px)`;
+    }
+  }
 
   // Render
   renderer.render(scene, camera);
