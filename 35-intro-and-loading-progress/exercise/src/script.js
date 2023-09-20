@@ -123,6 +123,18 @@ gltfLoader.load("/models/FlightHelmet/glTF/FlightHelmet.gltf", (gltf) => {
 });
 
 /**
+ * Points of interest
+ */
+const points = [
+  {
+    position: new THREE.Vector3(1.55, 0.3, -0.6),
+    element: document.querySelector(".point-0"),
+  },
+];
+
+console.log(points)
+
+/**
  * Lights
  */
 const directionalLight = new THREE.DirectionalLight("#ffffff", 3);
